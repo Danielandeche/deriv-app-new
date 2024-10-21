@@ -1,12 +1,10 @@
-import React from 'react';
-import { getSavedWorkspaces } from '@deriv/bot-skeleton';
+import { useState, useEffect } from 'react';
 import { Text } from '@deriv/components';
 import { observer, useStore } from '@deriv/stores';
 import { Localize, localize } from '@deriv/translations';
-import { useDBotStore } from 'Stores/useDBotStore';
 import DeleteDialog from './delete-dialog';
-import RecentWorkspace from './recent-workspace';
 import './index.scss';
+import RecentWorkspace from './recent-workspace';
 
 type THeader = {
     label: string;
@@ -19,46 +17,29 @@ const HEADERS: THeader[] = [
         className: 'bot-list__header__label',
     },
     {
-        label: localize('Last modified'),
-        className: 'bot-list__header__time-stamp',
-    },
-    {
-        label: localize('Status'),
-        className: 'bot-list__header__load-type',
+        label: localize('File size'),
+        className: 'bot-list__header__file-size',
     },
 ];
 
 const DashboardBotList = observer(() => {
-    const { load_modal, dashboard } = useDBotStore();
-    const { setDashboardStrategies, dashboard_strategies } = load_modal;
-    const { setStrategySaveType, strategy_save_type } = dashboard;
     const { ui } = useStore();
     const { is_desktop } = ui;
-    const get_first_strategy_info = React.useRef(false);
-    const get_instacee = React.useRef(false);
+    const [xmlBots, setXmlBots] = useState<{ name: string; size: string }[]>([]);
 
-    React.useEffect(() => {
-        setStrategySaveType('');
-        const getStrategies = async () => {
-            const recent_strategies = await getSavedWorkspaces();
-            setDashboardStrategies(recent_strategies);
-            if (!get_instacee.current) {
-                get_instacee.current = true;
-            }
+    useEffect(() => {
+        const fetchXMLBots = async () => {
+            const bots = [
+                { name: 'dollarprinter', size: '2 KB' },
+                { name: 'ftp2', size: '3 KB' },
+                { name: 'fypt', size: '1.5 KB' },
+            ];
+            setXmlBots(bots);
         };
-        getStrategies();
-        //this dependency is used when we use the save modal popup
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [strategy_save_type]);
 
-    React.useEffect(() => {
-        if (!dashboard_strategies?.length && !get_first_strategy_info.current) {
-            get_first_strategy_info.current = true;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetchXMLBots();
     }, []);
 
-    if (!dashboard_strategies?.length) return null;
     return (
         <div className='bot-list__container'>
             <div className='bot-list__wrapper'>
@@ -68,19 +49,17 @@ const DashboardBotList = observer(() => {
                     </Text>
                 </div>
                 <div className='bot-list__header'>
-                    {HEADERS.map(({ label, className }) => {
-                        return (
-                            <div className={className} key={label}>
-                                <Text size={is_desktop ? 'xs' : 'xxs'} weight='bold'>
-                                    {label}
-                                </Text>
-                            </div>
-                        );
-                    })}
+                    {HEADERS.map(({ label, className }) => (
+                        <div className={className} key={label}>
+                            <Text size={is_desktop ? 'xs' : 'xxs'} weight='bold'>
+                                {label}
+                            </Text>
+                        </div>
+                    ))}
                 </div>
                 <div className='bot-list__table'>
-                    {dashboard_strategies.map(workspace => (
-                        <RecentWorkspace key={workspace.id} workspace={workspace} />
+                    {xmlBots.map((bot, index) => (
+                        <RecentWorkspace key={index} bot={bot} />
                     ))}
                 </div>
             </div>
